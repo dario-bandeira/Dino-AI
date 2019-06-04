@@ -5,6 +5,7 @@ import sys
 import pygame
 import random
 from pygame import *
+import numpy as np
 
 pygame.init()
 
@@ -469,6 +470,8 @@ def gameplay():
             counter = (counter + 1)
 
             # AI
+
+            
 
             # AI END
 
