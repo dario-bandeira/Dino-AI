@@ -468,6 +468,10 @@ def gameplay():
 
             counter = (counter + 1)
 
+            # AI
+
+            # AI END
+
         if gameQuit:
             break
 
