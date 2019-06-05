@@ -197,6 +197,7 @@ class Cactus(pygame.sprite.Sprite):
 
     def update(self):
         self.rect = self.rect.move(self.movement)
+        print(self.rect)
 
         if self.rect.right < 0:
             self.kill()
@@ -291,6 +292,16 @@ class Scoreboard():
             self.image.blit(self.tempimages[s],self.temprect)
             self.temprect.left += self.temprect.width
         self.temprect.left = 0
+
+
+class NeuralNetwork:
+    def synapse(self, ai_input):
+        ai_input = ai_input
+        ai_syn1 = np.random.uniform(-1, 1, (3, 4))
+        ai_hidden = np.dot(ai_input, ai_syn1)
+        ai_syn2 = np.random.uniform(-1, 1, (4, 1))
+        ai_output = np.dot(ai_hidden, ai_syn2)
+        return ai_output
 
 
 def introscreen():
@@ -469,9 +480,10 @@ def gameplay():
 
             counter = (counter + 1)
 
-            # AI
+            # AI Dario
 
-            
+            # nn1 = NeuralNetwork()
+            print(cacti[1].movement[0])
 
             # AI END
 
