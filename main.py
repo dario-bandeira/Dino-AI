@@ -197,7 +197,6 @@ class Cactus(pygame.sprite.Sprite):
 
     def update(self):
         self.rect = self.rect.move(self.movement)
-        print(self.rect)
 
         if self.rect.right < 0:
             self.kill()
@@ -483,7 +482,21 @@ def gameplay():
             # AI Dario
 
             # nn1 = NeuralNetwork()
-            print(cacti[1].movement[0])
+
+            # getting cactus in game
+            cactis_in_game = []
+            for i in cacti.sprites():
+                if i.rect.left > playerDino.rect.right:
+                    cactis_in_game.append(i.rect)
+
+            # distance between Dino and the nearest cactus
+            cactis_left_values = []
+            for i in cactis_in_game:
+                cactis_left_values.append(i.left)
+            nearest_cacti = min(cactis_left_values)
+
+            # length of nearest cactus
+            # cacti_length = nearest_cacti.
 
             # AI END
 
