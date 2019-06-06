@@ -8,6 +8,17 @@ from pygame import *
 import numpy as np
 import pyautogui as pag
 
+'''
+No início os crossovers e mutações precisam ser exageradas 
+pra explorar o máximo de possibilidades.
+
+A partir de um certo desempenho se diminui a margem de
+mudanças.
+
+Quando o desempenho estiver bom, parar de fazer crossover,
+ou fazer menos, e apostar mais em mutações. 
+'''
+
 pag.PAUSE = 0.0
 pag.MINIMUM_DURATION = 0.0
 pag.MINIMUM_SLEEP = 0.0
@@ -316,6 +327,9 @@ class NeuralNetwork:
         self.ai_syn2 = np.random.uniform(-1, 1, (3, 1))
         self.fitness = 0
 
+    def __dir__(self):
+        return self.ai_syn1, self.ai_syn2
+
     def synapse(self, ai_input):
         ai_input = ai_input
         ai_hidden = np.matmul(ai_input, self.ai_syn1)
@@ -338,11 +352,34 @@ def select_bests():
 
 
 def crossover():
-    pass
+    nn_array[10], nn_array[11] = \
+        nn_array[8], nn_array[9] = \
+        nn_array[6], nn_array[7] = \
+        nn_array[4], nn_array[5] = \
+        nn_array[2], nn_array[3] = \
+        nn_array[0], nn_array[1]
+
+    nn_array[2].ai_syn1[0], nn_array[3].ai_syn1[0] = nn_array[3].ai_syn1[0], nn_array[2].ai_syn1[0]
+    nn_array[4].ai_syn1[1], nn_array[5].ai_syn1[1] = nn_array[5].ai_syn1[1], nn_array[4].ai_syn1[1]
+    nn_array[6].ai_syn2,    nn_array[7].ai_syn2    = nn_array[7].ai_syn2,    nn_array[6].ai_syn2
+
+    nn_array[8].ai_syn1[0],  nn_array[9].ai_syn1[1] = nn_array[9].ai_syn1[1], nn_array[8].ai_syn1[0]
+    nn_array[10].ai_syn1[0], nn_array[11].ai_syn2   = nn_array[11].ai_syn2,   nn_array[10].ai_syn1[0]
+    nn_array[12].ai_syn1[1], nn_array[13].ai_syn2   = nn_array[13].ai_syn2,   nn_array[12].ai_syn1[1]
 
 
-def mutation():
-    pass
+def mutation(nn_array=[], change_all=True, max_rate=0.05):
+    for obj in nn_array:
+        if change_all:
+            for ai_syn_ in dir(obj):
+                for ai_syn_line in ai_syn_:
+                    for ai_syn_value in ai_syn_line:
+                        ai_syn_value *= np.random.uniform(-max_rate, max_rate)
+
+        else:
+            # every_connection_in_NN = []
+
+
 
 
 def introscreen():
@@ -557,18 +594,12 @@ def gameplay():
         while gameOver:
             nn_playing += 1
 
-            if nn_playing >= 10:  # last neural network played
+            if nn_playing >= 10:  # last neural network just played
                 nn_playing = 0
-                # seleciona os melhores
+                select_bests()
                 # faz crossover
                 # faz mutação
                 # clear_fitness()
-
-
-                for i in range(10):
-                    print(f"player {i} fitness: {nn_array[i].fitness}")
-
-                sys.exit()
             else:
                 gameplay()  # force restart
 
@@ -608,7 +639,7 @@ def main():
     #     gameplay()
 
     # creating 10 random neural networks
-    for i in range(10):
+    for i in range(14):
         nn_array.append(NeuralNetwork())
 
     gameplay()
