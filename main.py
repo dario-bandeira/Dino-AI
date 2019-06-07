@@ -336,6 +336,17 @@ class NeuralNetwork:
         ai_output = np.matmul(ai_hidden, self.ai_syn2)
         return ai_output
 
+    def mutate_all_synapses(self, max_rate=0.05):
+        for att in self.__dir__():
+            att *= np.random.uniform(-max_rate, max_rate)
+
+    def mutate_one_synapse(self, max_rate=0.05):
+        for att in self.__dir__():
+            att *= np.random.uniform(-max_rate, max_rate)
+
+
+
+
 
 def increase_fitness():
     nn_array[nn_playing].fitness += 1
@@ -374,10 +385,10 @@ def mutation(nn_array=[], change_all=True, max_rate=0.05):
             for ai_syn_ in dir(obj):
                 for ai_syn_line in ai_syn_:
                     for ai_syn_value in ai_syn_line:
-                        ai_syn_value *= np.random.uniform(-max_rate, max_rate)
+                        ai_syn_value *=
 
         else:
-            # every_connection_in_NN = []
+            np.random.choice(dir(obj))
 
 
 
