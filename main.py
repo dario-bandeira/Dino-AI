@@ -385,7 +385,7 @@ def mutation(nn_array=[], change_all=True, max_rate=0.05):
             for ai_syn_ in dir(obj):
                 for ai_syn_line in ai_syn_:
                     for ai_syn_value in ai_syn_line:
-                        ai_syn_value *=
+                        # ai_syn_value *=
 
         else:
             np.random.choice(dir(obj))
