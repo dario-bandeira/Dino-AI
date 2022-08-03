@@ -3,6 +3,7 @@ import pygame
 import random
 from pygame import *
 import pygame.freetype
+import numpy as np
 
 pygame.init()
 gamefont = pygame.freetype.Font(None, 16)
@@ -96,12 +97,13 @@ def extract_digits(number):
 		return digits
 
 
-class Dino:
+class Dino(pygame.sprite.Sprite):
 	def __init__(self, sizex=-1, sizey=-1):
+		pygame.sprite.Sprite.__init__(self, self.containers)
 		self.images, self.rect = load_sprite_sheet('dino.png', 5, 1, sizex, sizey, -1)
 		self.images1, self.rect1 = load_sprite_sheet('dino_ducking.png', 2, 1, 59, sizey, -1)
 		self.rect.bottom = int(0.98 * height)
-		self.rect.left = width / 15
+		self.rect.left = width / random.randint(10, 20)
 		self.image = self.images[0]
 		self.index = 0
 		self.counter = 0
@@ -116,6 +118,9 @@ class Dino:
 		self.stand_pos_width = self.rect.width
 		self.duck_pos_width = self.rect1.width
 
+		self.ai_syn1 = np.random.randint(-1000, 1000, (6, 6))
+		self.ai_syn2 = np.random.randint(-1000, 1000, (6, 2))
+
 	def draw(self):
 		screen.blit(self.image, self.rect)
 
@@ -124,7 +129,26 @@ class Dino:
 			self.rect.bottom = int(0.98 * height)
 			self.isJumping = False
 
-	def update(self):
+	def update(self, input):
+		hidden = np.matmul(input, self.ai_syn1)
+		for i, x in enumerate(hidden):
+			if hidden[i] < 0:
+				hidden[i] = 0
+
+		output = np.matmul(hidden, self.ai_syn2)
+		if output[0] > 0:
+			if self.rect.bottom == int(0.98 * height):
+				self.isJumping = True
+				self.movement[1] = -1 * self.jumpSpeed
+
+		if output[1] > 0:
+			self.isDucking = True
+			if self.movement[1] < 0:
+				self.movement[1] = 0
+			self.movement[1] += 4
+		else:
+			self.isDucking = False
+
 		if self.isJumping:
 			self.movement[1] = self.movement[1] + gravity
 
@@ -255,18 +279,24 @@ def gameplay():
 	gamespeed = 4
 	gameover = False
 	gamequit = False
-	playerdino = Dino(44, 47)
+	# playerdino = Dino(44, 47)
+	# playerdino2 = Dino(44, 47)
 	new_ground = Ground(-1 * gamespeed)
 	counter = 0
 
+	dinos = pygame.sprite.Group()
 	cacti = pygame.sprite.Group()
 	pteras = pygame.sprite.Group()
 	clouds = pygame.sprite.Group()
 	last_obstacle = pygame.sprite.Group()
 
+	Dino.containers = dinos
 	Cactus.containers = cacti
 	Ptera.containers = pteras
 	Cloud.containers = clouds
+
+	for x in range(10):
+		dinos.add(Dino(44, 47))
 
 	temp_images, temp_rect = load_sprite_sheet('numbers.png', 12, 1, 11, int(11 * 6 / 5), -1)
 	hi_image = pygame.Surface((22, int(11 * 6 / 5)))
@@ -278,6 +308,17 @@ def gameplay():
 	hi_rect.top = height * 0.1
 	hi_rect.left = width * 0.73
 
+	# def jump():
+	# 	if playerdino.rect.bottom == int(0.98 * height):
+	# 		playerdino.isJumping = True
+	# 		playerdino.movement[1] = -1 * playerdino.jumpSpeed
+	#
+	# def duck():
+	# 	playerdino.isDucking = True
+	# 	if playerdino.movement[1] < 0:
+	# 		playerdino.movement[1] = 0
+	# 	playerdino.movement[1] += 4
+
 	while not gameover:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -285,35 +326,32 @@ def gameplay():
 				gameover = True
 
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_SPACE:
-					if playerdino.rect.bottom == int(0.98 * height):
-						playerdino.isJumping = True
-						playerdino.movement[1] = -1 * playerdino.jumpSpeed
-
-				if event.key == pygame.K_DOWN:
-					playerdino.isDucking = True
-					if playerdino.movement[1] < 0:
-						playerdino.movement[1] = 0
-					playerdino.movement[1] += 4
+				# if event.key == pygame.K_SPACE:
+				# 	jump()
+				#
+				# if event.key == pygame.K_DOWN:
+				# 	duck()
 
 				if event.key == pygame.K_EQUALS:
 					FPS += 10
 				if event.key == pygame.K_MINUS:
 					FPS -= 10
 
-			if event.type == pygame.KEYUP:
-				if event.key == pygame.K_DOWN:
-					playerdino.isDucking = False
+			# if event.type == pygame.KEYUP:
+			# 	if event.key == pygame.K_DOWN:
+			# 		playerdino.isDucking = False
 
-		for c in cacti:
-			c.movement[0] = -1 * gamespeed
-			if pygame.sprite.collide_mask(playerdino, c):
-				playerdino.isDead = True
+		# for c in cacti:
+		# 	c.movement[0] = -1 * gamespeed
+		# 	if pygame.sprite.collide_mask(playerdino, c):
+		# 		playerdino.isDead = True
+		#
+		# for p in pteras:
+		# 	p.movement[0] = -1 * gamespeed
+		# 	if pygame.sprite.collide_mask(playerdino, p):
+		# 		playerdino.isDead = True
 
-		for p in pteras:
-			p.movement[0] = -1 * gamespeed
-			if pygame.sprite.collide_mask(playerdino, p):
-				playerdino.isDead = True
+		pygame.sprite.groupcollide(dinos, cacti, True, False)
 
 		if len(cacti) < 2:
 			if len(cacti) == 0:
@@ -334,19 +372,15 @@ def gameplay():
 		if len(clouds) < 5 and random.randrange(0, 300) == 10:
 			Cloud(width, random.randrange(int(height / 5), int(height / 2)))
 
-		playerdino.update()
-		cacti.update()
-		pteras.update()
-		clouds.update()
-		new_ground.update()
-
 		if pygame.display.get_surface() is not None:
 			screen.fill(background_col)
 			new_ground.draw()
 			clouds.draw(screen)
 			cacti.draw(screen)
 			pteras.draw(screen)
-			playerdino.draw()
+			dinos.draw(screen)
+			# playerdino.draw()
+			# playerdino2.draw()
 
 			# texto
 			if not cacti and not pteras:
@@ -362,21 +396,59 @@ def gameplay():
 				else:
 					obstaculo_mais_proximo = pteras.sprites()[0]
 
-			gamefont.render_to(screen, (10, 10), "Distância: " + str(obstaculo_mais_proximo.rect[0]), (0, 0, 0))
-			gamefont.render_to(screen, (10, 30), "Do chão: " + str(height - obstaculo_mais_proximo.rect[1] - obstaculo_mais_proximo.rect[2]), (0, 0, 0))
-			gamefont.render_to(screen, (10, 50), "Altura: " + str(obstaculo_mais_proximo.rect[3]), (0, 0, 0))
-			gamefont.render_to(screen, (10, 70), "Largura: " + str(obstaculo_mais_proximo.rect[2]), (0, 0, 0))
-			gamefont.render_to(screen, (10, 100), "Velocidade: " + str(gamespeed), (0, 0, 0))
-			gamefont.render_to(screen, (10, 120), "Altura Dino: " + str(height - playerdino.rect[1] - playerdino.rect[2]), (0, 0, 0))
-			gamefont.render_to(screen, (10, 160), "FPS: " + str(FPS), (0, 0, 0))
+			# distancia = obstaculo_mais_proximo.rect[0] - playerdino.rect.left
+			# do_chao = height - obstaculo_mais_proximo.rect[1] - obstaculo_mais_proximo.rect[2]
+			# altura = obstaculo_mais_proximo.rect[3]
+			# largura = obstaculo_mais_proximo.rect[2]
+			# altura_dino = height - playerdino.rect[1] - playerdino.rect[2]
+			#
+			# distancia2 = obstaculo_mais_proximo.rect[0] - playerdino2.rect.left
+			# do_chao2 = height - obstaculo_mais_proximo.rect[1] - obstaculo_mais_proximo.rect[2]
+			# altura2 = obstaculo_mais_proximo.rect[3]
+			# largura2 = obstaculo_mais_proximo.rect[2]
+			# altura_dino2 = height - playerdino2.rect[1] - playerdino2.rect[2]
+			#
+			# gamefont.render_to(screen, (10, 10), "Distância: " + str(distancia), (0, 0, 0))
+			# gamefont.render_to(screen, (10, 30), "Do chão: " + str(do_chao), (0, 0, 0))
+			# gamefont.render_to(screen, (10, 50), "Altura: " + str(altura), (0, 0, 0))
+			# gamefont.render_to(screen, (10, 70), "Largura: " + str(largura), (0, 0, 0))
+			# gamefont.render_to(screen, (10, 100), "Velocidade: " + str(gamespeed), (0, 0, 0))
+			# gamefont.render_to(screen, (10, 120), "Altura Dino: " + str(altura_dino), (0, 0, 0))
+			# gamefont.render_to(screen, (10, 160), "FPS: " + str(FPS), (0, 0, 0))
+			#
+			# gamefont.render_to(screen, (200, 10), "Distância: " + str(distancia2), (0, 0, 0))
+			# gamefont.render_to(screen, (200, 30), "Do chão: " + str(do_chao2), (0, 0, 0))
+			# gamefont.render_to(screen, (200, 50), "Altura: " + str(altura), (0, 0, 0))
+			# gamefont.render_to(screen, (200, 70), "Largura: " + str(largura), (0, 0, 0))
+			# gamefont.render_to(screen, (200, 100), "Velocidade: " + str(gamespeed), (0, 0, 0))
+			# gamefont.render_to(screen, (200, 120), "Altura Dino: " + str(altura_dino2), (0, 0, 0))
+			# gamefont.render_to(screen, (200, 160), "FPS: " + str(FPS), (0, 0, 0))
+
+			# testando
+			ai_input = [1,1,1,1,1,1
+				# distancia,
+				# do_chao,
+				# altura,
+				# largura,
+				# gamespeed,
+				# altura_dino
+			]
+
+			# playerdino.update(ai_input)
+			# playerdino2.update(ai_input)
+			dinos.update(ai_input)
+			cacti.update()
+			pteras.update()
+			clouds.update()
+			new_ground.update()
 
 			pygame.display.update()
 		clock.tick(FPS)
 
-		if playerdino.isDead:
-			gameover = True
+		# if playerdino.isDead:
+		# 	gameover = True
 
-		if counter % 700 == 699:
+		if counter % 700 == 699 and gamespeed < 8:
 			new_ground.speed -= 1
 			gamespeed += 1
 
