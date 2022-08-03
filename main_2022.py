@@ -103,7 +103,7 @@ class Dino(pygame.sprite.Sprite):
 		self.images, self.rect = load_sprite_sheet('dino.png', 5, 1, sizex, sizey, -1)
 		self.images1, self.rect1 = load_sprite_sheet('dino_ducking.png', 2, 1, 59, sizey, -1)
 		self.rect.bottom = int(0.98 * height)
-		self.rect.left = width / random.randint(10, 20)
+		self.rect.left = width / random.randint(6, 20)
 		self.image = self.images[0]
 		self.index = 0
 		self.counter = 0
@@ -295,29 +295,8 @@ def gameplay():
 	Ptera.containers = pteras
 	Cloud.containers = clouds
 
-	for x in range(10):
+	for x in range(100):
 		dinos.add(Dino(44, 47))
-
-	temp_images, temp_rect = load_sprite_sheet('numbers.png', 12, 1, 11, int(11 * 6 / 5), -1)
-	hi_image = pygame.Surface((22, int(11 * 6 / 5)))
-	hi_rect = hi_image.get_rect()
-	hi_image.fill(background_col)
-	hi_image.blit(temp_images[10], temp_rect)
-	temp_rect.left += temp_rect.width
-	hi_image.blit(temp_images[11], temp_rect)
-	hi_rect.top = height * 0.1
-	hi_rect.left = width * 0.73
-
-	# def jump():
-	# 	if playerdino.rect.bottom == int(0.98 * height):
-	# 		playerdino.isJumping = True
-	# 		playerdino.movement[1] = -1 * playerdino.jumpSpeed
-	#
-	# def duck():
-	# 	playerdino.isDucking = True
-	# 	if playerdino.movement[1] < 0:
-	# 		playerdino.movement[1] = 0
-	# 	playerdino.movement[1] += 4
 
 	while not gameover:
 		for event in pygame.event.get():
@@ -326,32 +305,18 @@ def gameplay():
 				gameover = True
 
 			if event.type == pygame.KEYDOWN:
-				# if event.key == pygame.K_SPACE:
-				# 	jump()
-				#
-				# if event.key == pygame.K_DOWN:
-				# 	duck()
 
 				if event.key == pygame.K_EQUALS:
 					FPS += 10
 				if event.key == pygame.K_MINUS:
 					FPS -= 10
 
-			# if event.type == pygame.KEYUP:
-			# 	if event.key == pygame.K_DOWN:
-			# 		playerdino.isDucking = False
-
-		# for c in cacti:
-		# 	c.movement[0] = -1 * gamespeed
-		# 	if pygame.sprite.collide_mask(playerdino, c):
-		# 		playerdino.isDead = True
-		#
-		# for p in pteras:
-		# 	p.movement[0] = -1 * gamespeed
-		# 	if pygame.sprite.collide_mask(playerdino, p):
-		# 		playerdino.isDead = True
-
-		pygame.sprite.groupcollide(dinos, cacti, True, False)
+		if pygame.sprite.groupcollide(dinos, cacti, True, False):
+			print(len(dinos))
+			if len(dinos) > 0:
+				melhordino = dinos.sprites()[0]
+			else:
+				gameover = True
 
 		if len(cacti) < 2:
 			if len(cacti) == 0:
@@ -458,6 +423,9 @@ def gameplay():
 			break
 
 		if gameover:
+			dinos.empty()
+			for x in range(100):
+				dinos.add(melhordino)
 			gameplay()
 
 	pygame.quit()
