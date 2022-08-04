@@ -147,8 +147,6 @@ class Dino(pygame.sprite.Sprite):
 			self.isJumping = False
 
 	def update(self, input):
-		# input.append(self.rect.bottom)
-		# print(input)
 		hidden = np.matmul(input, self.ai_syn1)
 		for i, x in enumerate(hidden):
 			if hidden[i] < 0:
@@ -205,6 +203,15 @@ class Dino(pygame.sprite.Sprite):
 			self.score += 1
 
 		self.counter = (self.counter + 1)
+
+	def mutate(self, amount=50):
+		for x in range(5):
+			for y in range(6):
+				self.ai_syn1[x][y] += random.choice([amount, -amount])
+
+		for x in range(6):
+			for y in range(2):
+				self.ai_syn2[x][y] += random.choice([amount, -amount])
 
 
 class Cactus(pygame.sprite.Sprite):
@@ -315,7 +322,7 @@ geracao = 1
 
 # gameplay()
 def gameplay():
-	# reseta variáveis (gamespeed, gameover, gamequit, counter)
+	# reseta variáveis (gamespeed, gameover, gamequit, counter e chão)
 	global FPS, melhordino, geracao
 	gamespeed = 4
 	gameover = False
@@ -410,6 +417,15 @@ def gameplay():
 				gamespeed
 			]
 
+			# checa colisões, elimina dinos e seleciona o melhor ainda vivo
+			if pygame.sprite.groupcollide(dinos, cacti, True, False) or pygame.sprite.groupcollide(dinos, pteras, True, False):
+				if len(dinos) > 0:
+					melhordino = dinos.sprites()[0]
+					print(melhordino)
+				else:
+					# se não tem mais dinos: gameover = True
+					gameover = True
+
 			# chama a função 'update' dos elementos do jogo (dinos, cactos, pteras, nuvens e chão)
 			dinos.update(ai_input)
 			cacti.update()
@@ -421,13 +437,6 @@ def gameplay():
 			pygame.display.update()
 		# define o clock
 		clock.tick(FPS)
-
-		# checa colisões, elimina dinos e seleciona o melhor ainda vivo
-		if pygame.sprite.groupcollide(dinos, cacti, True, False) or pygame.sprite.groupcollide(dinos, pteras, True, False):
-			if len(dinos) > 0:
-				melhordino = dinos.sprites()[0]
-			else:
-				gameover = True
 
 		# se counter ... : aumenta velocidade
 		if counter % 700 == 699 and gamespeed < 8:
@@ -443,11 +452,18 @@ def gameplay():
 
 		# se gameover:
 		if gameover:
-			# nova geração
-			geracao += 1
+			# limpa array de dinos, cactos e pteras
 			dinos.empty()
+			cacti.empty()
+			pteras.empty()
+
+			# copia o melhor no array
 			for x in range(100):
-				dinos.add(melhordino)
+				dinos.add(melhordino.mutate())
+
+			# faz mutações
+			geracao += 1
+
 			# gameplay()
 			gameplay()
 
