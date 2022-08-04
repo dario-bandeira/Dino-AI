@@ -5,6 +5,7 @@ from pygame import *
 import pygame.freetype
 import numpy as np
 
+# inicia pygame
 pygame.init()
 gamefont = pygame.freetype.Font(None, 16)
 
@@ -21,6 +22,7 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("T-Rex Rush")
 
 
+# declara funções
 def load_image(
 		name,
 		sizex=-1,
@@ -97,13 +99,28 @@ def extract_digits(number):
 		return digits
 
 
+def paused():
+	pause = True
+	gamefont.render_to(screen, (width/2, height/2), "PAUSE", (0, 0, 0))
+	pygame.display.update()
+	clock.tick(15)
+
+	while pause:
+		for event in pygame.event.get():
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_p:
+					clock.tick(FPS)
+					pause = False
+
+
+# Cria classes
 class Dino(pygame.sprite.Sprite):
 	def __init__(self, sizex=-1, sizey=-1):
 		pygame.sprite.Sprite.__init__(self, self.containers)
 		self.images, self.rect = load_sprite_sheet('dino.png', 5, 1, sizex, sizey, -1)
 		self.images1, self.rect1 = load_sprite_sheet('dino_ducking.png', 2, 1, 59, sizey, -1)
 		self.rect.bottom = int(0.98 * height)
-		self.rect.left = width / 15  # random.randint(6, 20)
+		self.rect.left = width / random.randint(6, 20)
 		self.image = self.images[0]
 		self.index = 0
 		self.counter = 0
@@ -276,6 +293,7 @@ class Cloud(pygame.sprite.Sprite):
 			self.kill()
 
 
+# Cria grupos de sprites
 dinos = pygame.sprite.Group()
 cacti = pygame.sprite.Group()
 pteras = pygame.sprite.Group()
@@ -287,6 +305,7 @@ Cactus.containers = cacti
 Ptera.containers = pteras
 Cloud.containers = clouds
 
+# Cria array de dinos e variáveis (melhordino e geração)
 for x in range(100):
 	dinos.add(Dino(44, 47))
 
@@ -294,7 +313,9 @@ melhordino = None
 geracao = 1
 
 
+# gameplay()
 def gameplay():
+	# reseta variáveis (gamespeed, gameover, gamequit, counter)
 	global FPS, melhordino, geracao
 	gamespeed = 4
 	gameover = False
@@ -302,25 +323,24 @@ def gameplay():
 	new_ground = Ground(-1 * gamespeed)
 	counter = 0
 
+	# while not gameover
 	while not gameover:
+
+		# checa teclas pressionadas
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				gamequit = True
 				gameover = True
 
 			if event.type == pygame.KEYDOWN:
-
 				if event.key == pygame.K_EQUALS:
 					FPS += 10
 				if event.key == pygame.K_MINUS:
 					FPS -= 10
+				if event.key == pygame.K_p:
+					paused()
 
-		if pygame.sprite.groupcollide(dinos, cacti, True, False) or pygame.sprite.groupcollide(dinos, pteras, True, False):
-			if len(dinos) > 0:
-				melhordino = dinos.sprites()[0]
-			else:
-				gameover = True
-
+		# add cacto
 		if len(cacti) < 2:
 			if len(cacti) == 0:
 				last_obstacle.empty()
@@ -331,26 +351,28 @@ def gameplay():
 						last_obstacle.empty()
 						last_obstacle.add(Cactus(gamespeed, 40, 40))
 
+		# add ptera
 		if len(pteras) == 0 and random.randrange(0, 200) == 10 and counter > 500:
 			for l in last_obstacle:
 				if l.rect.right < width * 0.8:
 					last_obstacle.empty()
 					last_obstacle.add(Ptera(gamespeed, 46, 40))
 
+		# add nuvem
 		if len(clouds) < 5 and random.randrange(0, 300) == 10:
 			Cloud(width, random.randrange(int(height / 5), int(height / 2)))
 
+		# se display está ativo:
 		if pygame.display.get_surface() is not None:
+			# limpa tela e desenha nuvens, chão, cactos, pteras e dinos
 			screen.fill(background_col)
 			new_ground.draw()
 			clouds.draw(screen)
 			cacti.draw(screen)
 			pteras.draw(screen)
 			dinos.draw(screen)
-			# playerdino.draw()
-			# playerdino2.draw()
 
-			# tela
+			# escreve infos de IA na tela (distância, altura, etc)
 			if not cacti and not pteras:
 				gamefont.render_to(screen, (10, 10), "Distância: " + str(width), (0, 0, 0))
 				gamefont.render_to(screen, (10, 30), "Altura: " + str(15), (0, 0, 0))
@@ -379,7 +401,7 @@ def gameplay():
 			gamefont.render_to(screen, (200, 10), "Vivos: " + str(len(dinos)), (0, 0, 0))
 			gamefont.render_to(screen, (200, 30), "Geração: " + str(geracao), (0, 0, 0))
 
-			# testando
+			# cria array com informações de entrada (ai_input)
 			ai_input = [
 				distancia,
 				do_chao,
@@ -388,34 +410,45 @@ def gameplay():
 				gamespeed
 			]
 
-			# playerdino.update(ai_input)
-			# playerdino2.update(ai_input)
+			# chama a função 'update' dos elementos do jogo (dinos, cactos, pteras, nuvens e chão)
 			dinos.update(ai_input)
 			cacti.update()
 			pteras.update()
 			clouds.update()
 			new_ground.update()
 
+			# atualiza display
 			pygame.display.update()
+		# define o clock
 		clock.tick(FPS)
 
-		# if playerdino.isDead:
-		# 	gameover = True
+		# checa colisões, elimina dinos e seleciona o melhor ainda vivo
+		if pygame.sprite.groupcollide(dinos, cacti, True, False) or pygame.sprite.groupcollide(dinos, pteras, True, False):
+			if len(dinos) > 0:
+				melhordino = dinos.sprites()[0]
+			else:
+				gameover = True
 
+		# se counter ... : aumenta velocidade
 		if counter % 700 == 699 and gamespeed < 8:
 			new_ground.speed -= 1
 			gamespeed += 1
 
+		# incrementa counter
 		counter = (counter + 1)
 
+		# se gamequit: sai do jogo
 		if gamequit:
 			break
 
+		# se gameover:
 		if gameover:
+			# nova geração
 			geracao += 1
 			dinos.empty()
 			for x in range(100):
 				dinos.add(melhordino)
+			# gameplay()
 			gameplay()
 
 	pygame.quit()
