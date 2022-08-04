@@ -1,0 +1,34 @@
+# inicia pygame
+# declara funções
+# Cria classes
+# Cria grupos de sprites
+# Cria array de dinos e variáveis (melhordino e geração)
+
+# gameplay()
+  # reseta variáveis (gamespeed, gameover, gamequit, counter e chão)
+
+  # while not gameover
+    # checa teclas pressionadas
+    # add cacto
+    # add ptera
+    # add nuvem
+    # se display está ativo:
+      # limpa tela e desenha nuvens, chão, cactos, pteras e dinos
+      # escreve infos de IA na tela (distância, altura, etc)
+      # cria array com informações de entrada (ai_input)
+      # checa colisões, elimina dinos e seleciona o melhor ainda vivo
+      # se não tem mais dinos: gameover = True
+      # chama a função 'update' dos elementos do jogo (dinos, cactos, pteras, nuvens e chão)
+      # atualiza display
+    # define o clock
+    # se counter ... : aumenta velocidade
+    # incrementa counter
+    # se gamequit: sai do jogo
+
+    # se gameover:
+      \\\\
+      # limpa array de dinos
+      # copia o melhor no array
+      # faz mutações
+      ////
+      # gameplay()
