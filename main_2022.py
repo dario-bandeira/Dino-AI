@@ -4,13 +4,14 @@ import random
 from pygame import *
 import pygame.freetype
 import numpy as np
+import copy
 
 # inicia pygame
 pygame.init()
 gamefont = pygame.freetype.Font(None, 16)
 
 scr_size = (width, height) = (1240, 720)
-FPS = 60
+FPS = 80
 gravity = 0.6
 
 black = (0, 0, 0)
@@ -115,10 +116,10 @@ def paused():
 
 # Cria classes
 class Dino(pygame.sprite.Sprite):
-	def __init__(self, sizex=-1, sizey=-1):
+	def __init__(self, obj=False):
 		pygame.sprite.Sprite.__init__(self, self.containers)
-		self.images, self.rect = load_sprite_sheet('dino.png', 5, 1, sizex, sizey, -1)
-		self.images1, self.rect1 = load_sprite_sheet('dino_ducking.png', 2, 1, 59, sizey, -1)
+		self.images, self.rect = load_sprite_sheet('dino.png', 5, 1, 44, 47, -1)
+		self.images1, self.rect1 = load_sprite_sheet('dino_ducking.png', 2, 1, 59, 47, -1)
 		self.rect.bottom = int(0.98 * height)
 		self.rect.left = width / random.randint(6, 20)
 		self.image = self.images[0]
@@ -135,8 +136,21 @@ class Dino(pygame.sprite.Sprite):
 		self.stand_pos_width = self.rect.width
 		self.duck_pos_width = self.rect1.width
 
-		self.ai_syn1 = np.random.randint(-1000, 1000, (5, 6))
-		self.ai_syn2 = np.random.randint(-1000, 1000, (6, 2))
+		if obj:
+			self.ai_syn1 = copy.deepcopy(obj.ai_syn1)
+			self.ai_syn2 = copy.deepcopy(obj.ai_syn2)
+
+			for x in range(len(self.ai_syn1)):
+				for y in range(len(self.ai_syn1[0])):
+					self.ai_syn1[x][y] *= np.random.uniform(1.5, 0.5)
+
+			for x in range(len(self.ai_syn2)):
+				for y in range(len(self.ai_syn2[0])):
+					self.ai_syn2[x][y] *= np.random.uniform(1.05, 0.95)
+
+		else:
+			self.ai_syn1 = np.random.randint(-1000, 1000, (5, 6))
+			self.ai_syn2 = np.random.randint(-1000, 1000, (6, 2))
 
 	def draw(self):
 		screen.blit(self.image, self.rect)
@@ -203,15 +217,6 @@ class Dino(pygame.sprite.Sprite):
 			self.score += 1
 
 		self.counter = (self.counter + 1)
-
-	def mutate(self, amount=50):
-		for x in range(5):
-			for y in range(6):
-				self.ai_syn1[x][y] += random.choice([amount, -amount])
-
-		for x in range(6):
-			for y in range(2):
-				self.ai_syn2[x][y] += random.choice([amount, -amount])
 
 
 class Cactus(pygame.sprite.Sprite):
@@ -314,7 +319,7 @@ Cloud.containers = clouds
 
 # Cria array de dinos e variáveis (melhordino e geração)
 for x in range(100):
-	dinos.add(Dino(44, 47))
+	dinos.add(Dino())
 
 melhordino = None
 geracao = 1
@@ -421,7 +426,6 @@ def gameplay():
 			if pygame.sprite.groupcollide(dinos, cacti, True, False) or pygame.sprite.groupcollide(dinos, pteras, True, False):
 				if len(dinos) > 0:
 					melhordino = dinos.sprites()[0]
-					print(melhordino)
 				else:
 					# se não tem mais dinos: gameover = True
 					gameover = True
@@ -459,7 +463,7 @@ def gameplay():
 
 			# copia o melhor no array
 			for x in range(100):
-				dinos.add(melhordino.mutate())
+				dinos.add(Dino(melhordino))
 
 			# faz mutações
 			geracao += 1
